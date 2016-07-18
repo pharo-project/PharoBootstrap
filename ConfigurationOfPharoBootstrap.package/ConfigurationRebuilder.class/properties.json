@@ -1,0 +1,15 @@
+{
+	"category" : "ConfigurationOfPharoBootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"versions",
+		"baseRepository" ],
+	"name" : "ConfigurationRebuilder",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

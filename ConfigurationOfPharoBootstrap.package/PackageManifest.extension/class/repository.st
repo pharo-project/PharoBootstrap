@@ -1,0 +1,4 @@
+*ConfigurationOfPharoBootstrap
+repository
+
+	^ nil

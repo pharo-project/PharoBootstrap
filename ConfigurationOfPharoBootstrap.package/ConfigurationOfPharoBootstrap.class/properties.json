@@ -1,0 +1,14 @@
+{
+	"category" : "ConfigurationOfPharoBootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		"LastVersionLoad" ],
+	"commentStamp" : "",
+	"instvars" : [
+		"project" ],
+	"name" : "ConfigurationOfPharoBootstrap",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }
