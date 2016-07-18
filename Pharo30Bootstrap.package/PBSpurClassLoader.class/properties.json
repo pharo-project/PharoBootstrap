@@ -1,0 +1,14 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"nextClassIndex" ],
+	"name" : "PBSpurClassLoader",
+	"pools" : [
+		 ],
+	"super" : "PBClassLoader",
+	"type" : "normal" }

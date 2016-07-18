@@ -1,0 +1,20 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"objectSpace",
+		"classLoader",
+		"systemDefinition",
+		"bootstrapInterpreter",
+		"bootstrappedBindingCache",
+		"bootstrapEnvironment",
+		"remoteMetaclassBindings" ],
+	"name" : "PBBootstrap30",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

@@ -1,0 +1,23 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"builder",
+		"initializedClasses",
+		"environment",
+		"systemDefinition",
+		"compactClasses",
+		"shouldInitializeClassPool",
+		"useClassBuilder",
+		"fullyLoaded",
+		"definitionMirrorMap",
+		"mirrorDefinitionMap" ],
+	"name" : "PBClassLoader",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

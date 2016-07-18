@@ -1,0 +1,14 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		 ],
+	"name" : "PBBootstrapSpur5064bit",
+	"pools" : [
+		 ],
+	"super" : "PBBootstrapSpur50",
+	"type" : "normal" }

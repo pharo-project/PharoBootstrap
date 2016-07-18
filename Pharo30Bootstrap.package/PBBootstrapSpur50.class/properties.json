@@ -1,0 +1,15 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"nextOrdinaryClassIndex",
+		"freeListsOop" ],
+	"name" : "PBBootstrapSpur50",
+	"pools" : [
+		 ],
+	"super" : "PBBootstrap50",
+	"type" : "normal" }

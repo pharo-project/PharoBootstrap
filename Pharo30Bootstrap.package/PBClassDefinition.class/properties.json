@@ -1,0 +1,15 @@
+{
+	"category" : "Pharo30Bootstrap",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"classDefinition",
+		"bootstrapEnvironment" ],
+	"name" : "PBClassDefinition",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }
