@@ -19,7 +19,7 @@ addons:
       - libfreetype6:i386
 
 install: 
-  - wget -O - get.pharo.org/{PHARO_VERSION}+vm | bash
+  - wget -O - get.pharo.org/${PHARO_VERSION}+vm | bash
   - ./scripts/install-packages.sh
 
 script:
