@@ -25,4 +25,4 @@ install:
   - ./scripts/install-packages.sh
 
 script:
-  - ./scripts/run ${BOOTSTRAP_VERSION} ${BOOTSTRAP_ARCH} ${BOOTSTRAP_DISTIRBUTION}
+  - ./scripts/run.sh ${BOOTSTRAP_VERSION} ${BOOTSTRAP_ARCH} ${BOOTSTRAP_DISTIRBUTION}
