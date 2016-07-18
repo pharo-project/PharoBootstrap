@@ -1,0 +1,26 @@
+language: c
+
+env:
+	-PHARO_VERSION=50
+	-BOOTSTRAP_ARCH=32
+	-BOOTSTRAP_ARCH=64
+	-BOOTSTRAP_DISTIRBUTION=default
+	-BOOTSTRAP_DISTIRBUTION=minimal
+	-BOOTSTRAP_VERSION=6.0.60098
+
+
+addons:
+  apt:
+    packages:
+      - lib32asound2
+      - lib32z1
+      - lib32bz2-1.0
+      - libssl1.0.0:i386
+      - libfreetype6:i386
+
+install: 
+  - wget -O - get.pharo.org/{PHARO_VERSION}+vm | bash
+  - ./scripts/install-packages.sh
+
+script:
+  - ./scripts/run ${BOOTSTRAP_VERSION} ${BOOTSTRAP_ARCH} ${BOOTSTRAP_DISTIRBUTION}
