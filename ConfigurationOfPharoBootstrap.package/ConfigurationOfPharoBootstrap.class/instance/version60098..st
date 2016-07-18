@@ -72,7 +72,7 @@ version60098: spec
 			spec package: 'Files-Tests' with: 'Files-Tests-TheIntegrator.12'.
 			spec package: 'JobsTests' with: 'JobsTests-TheIntegrator.2'.
 			spec package: 'Kernel-Tests' with: 'Kernel-Tests-TheIntegrator.80'.
-			spec package: 'Monticello-Tests' with: 'MonticelloTests-TheIntegrator.35'.
+			spec package: 'Monticello-Tests' with: 'Monticello-Tests-TheIntegrator.35'.
 			spec package: 'MonticelloMocks' with: 'MonticelloMocks-TheIntegrator.4'.
 			spec package: 'Multilingual-Tests' with: 'Multilingual-Tests-TheIntegrator.46'.
 			spec package: 'OpalCompiler-Tests' with: 'OpalCompiler-Tests-TheIntegrator.345'.
