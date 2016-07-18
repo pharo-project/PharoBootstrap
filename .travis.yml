@@ -1,6 +1,7 @@
 language: c
 
 env:
+  matrix:
     - PHARO_VERSION=50
     - BOOTSTRAP_ARCH=32
     - BOOTSTRAP_ARCH=64
