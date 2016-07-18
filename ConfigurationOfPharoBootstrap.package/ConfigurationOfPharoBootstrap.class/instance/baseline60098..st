@@ -129,7 +129,7 @@ baseline60098: spec
 			
 			spec group: 'tests' with: #( 'tests-minimal' 'Compression-Tests' 'Monticello-Tests' 'Ring-Tests-Monticello' ).
 			spec group: 'full-minimal' with: #( 'minimal' 'tests-minimal').
-			spec group: 'full' with: #( 'default' 'tests').
+			spec group: 'full-default' with: #( 'default' 'tests').
 			
 			spec group: 'default' with: #( 'minimal' 'Monticello' 'Ring-Monticello' 'Compression').
 			
