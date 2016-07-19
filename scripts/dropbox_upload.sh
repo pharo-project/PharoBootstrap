@@ -2,7 +2,7 @@
 #
 # Dropbox Uploader
 #
-# Copyright (C) 2010-2014 Andrea Fabrizi <andrea.fabrizi@gmail.com>
+# Copyright (C) 2010-2013 Andrea Fabrizi <andrea.fabrizi@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
-
-#Default configuration file
-CONFIG_FILE=~/.dropbox_uploader
 
 #Default chunk size in Mb for the upload process
 #It is recommended to increase this value only if you have enough free space on your /tmp partition
@@ -41,7 +38,7 @@ ERROR_STATUS=0
 
 #Don't edit these...
 API_REQUEST_TOKEN_URL="https://api.dropbox.com/1/oauth/request_token"
-API_USER_AUTH_URL="https://www.dropbox.com/1/oauth/authorize"
+API_USER_AUTH_URL="https://www2.dropbox.com/1/oauth/authorize"
 API_ACCESS_TOKEN_URL="https://api.dropbox.com/1/oauth/access_token"
 API_CHUNKED_UPLOAD_URL="https://api-content.dropbox.com/1/chunked_upload"
 API_CHUNKED_UPLOAD_COMMIT_URL="https://api-content.dropbox.com/1/commit_chunked_upload"
@@ -54,14 +51,11 @@ API_METADATA_URL="https://api.dropbox.com/1/metadata"
 API_INFO_URL="https://api.dropbox.com/1/account/info"
 API_MKDIR_URL="https://api.dropbox.com/1/fileops/create_folder"
 API_SHARES_URL="https://api.dropbox.com/1/shares"
-API_SAVEURL_URL="https://api.dropbox.com/1/save_url/auto"
-API_SAVEURL_JOB_URL="https://api.dropbox.com/1/save_url_job"
-APP_CREATE_URL="https://www.dropbox.com/developers/apps"
+APP_CREATE_URL="https://www2.dropbox.com/developers/apps"
 RESPONSE_FILE="$TMP_DIR/du_resp_$RANDOM"
 CHUNK_FILE="$TMP_DIR/du_chunk_$RANDOM"
-TEMP_FILE="$TMP_DIR/du_tmp_$RANDOM"
-BIN_DEPS="sed basename date grep stat dd mkdir"
-VERSION="0.16"
+BIN_DEPS="sed basename date grep stat dd printf mkdir"
+VERSION="0.12.1"
 
 umask 077
 
@@ -75,12 +69,8 @@ shopt -s nullglob #Bash allows filename patterns which match no files to expand 
 shopt -s dotglob  #Bash includes filenames beginning with a "." in the results of filename expansion
 
 #Look for optional config file parameter
-while getopts ":qpskdhf:" opt; do
+while getopts ":qpskd:" opt; do
     case $opt in
-
-    f)
-      CONFIG_FILE=$OPTARG
-    ;;
 
     d)
       DEBUG=1
@@ -102,10 +92,6 @@ while getopts ":qpskdhf:" opt; do
       SKIP_EXISTING_FILES=1
     ;;
 
-    h)
-      HUMAN_READABLE_SIZE=1
-    ;;
-
     \?)
       echo "Invalid option: -$OPTARG" >&2
       exit 1
@@ -120,9 +106,6 @@ while getopts ":qpskdhf:" opt; do
 done
 
 if [[ $DEBUG != 0 ]]; then
-    echo $VERSION
-    uname -a 2> /dev/null
-    cat /etc/issue 2> /dev/null
     set -x
     RESPONSE_FILE="$TMP_DIR/du_resp_debug"
 fi
@@ -152,21 +135,6 @@ else
     HAVE_READLINK=0
 fi
 
-#Forcing to use the builtin printf, if it's present, because it's better
-#otherwise the external printf program will be used
-#Note that the external printf command can cause character encoding issues!
-builtin printf "" 2> /dev/null
-if [[ $? == 0 ]]; then
-    PRINTF="builtin printf"
-    PRINTF_OPT="-v o"
-else
-    PRINTF=$(which printf)
-    if [[ $? != 0 ]]; then
-        echo -e "Error: Required program could not be found: printf"
-    fi
-    PRINTF_OPT=""
-fi
-
 #Print the message based on $QUIET variable
 function print
 {
@@ -187,82 +155,60 @@ function remove_temp_files
     if [[ $DEBUG == 0 ]]; then
         rm -fr "$RESPONSE_FILE"
         rm -fr "$CHUNK_FILE"
-        rm -fr "$TEMP_FILE"
-    fi
-}
-
-#Converts bytes to human readable format
-function convert_bytes
-{
-    if [[ $HUMAN_READABLE_SIZE == 1 ]]; then
-    if (($1 > 1073741824));then
-        echo $(($1/1073741824)).$(($1%1073741824/100000000))"G";
-    elif (($1 > 1048576));then
-        echo $(($1/1048576)).$(($1%1048576/100000))"M";
-    elif (($1 > 1024));then
-        echo $(($1/1024)).$(($1%1024/100))"K";
-    else
-        echo $1;
-    fi
-    else
-    echo $1;
     fi
 }
 
 #Returns the file size in bytes
+# generic GNU Linux: linux-gnu
+# windows cygwin:    cygwin
+# raspberry pi:      linux-gnueabihf
+# macosx:            darwin10.0
+# freebsd:           FreeBSD
+# qnap:              linux-gnueabi
+# iOS:               darwin9
 function file_size
 {
-    #Generic GNU
-    SIZE=$(stat --format="%s" "$1" 2> /dev/null)
-    if [ $? -eq 0 ]; then
-        echo $SIZE
-        return
-    fi   
-
     #Some embedded linux devices
-    SIZE=$(stat -c "%s" "$1" 2> /dev/null)
-    if [ $? -eq 0 ]; then
-        echo $SIZE
+    if [[ $OSTYPE == "linux-gnueabi" || $OSTYPE == "linux-gnu" ]]; then
+        stat -c "%s" "$1"
+        return
+
+    #Generic Unix
+    elif [[ ${OSTYPE:0:5} == "linux" || $OSTYPE == "cygwin" || ${OSTYPE:0:7} == "solaris" || ${OSTYPE} == "darwin9" ]]; then
+        stat --format="%s" "$1"
+        return
+
+    #BSD or others OS
+    else
+        stat -f "%z" "$1"
         return
     fi
-
-    #BSD, OSX and other OSs
-    SIZE=$(stat -f "%z" "$1" 2> /dev/null)
-    if [ $? -eq 0 ]; then
-        echo $SIZE
-        return
-    fi
-
-    echo "0"
 }
-
 
 #Usage
 function usage
 {
     echo -e "Dropbox Uploader v$VERSION"
     echo -e "Andrea Fabrizi - andrea.fabrizi@gmail.com\n"
-    echo -e "Usage: $0 [PARAMETERS] COMMAND..."
+    echo -e "Usage: $0 COMMAND [PARAMETERS]..."
     echo -e "\nCommands:"
 
-    echo -e "\t upload   <LOCAL_FILE/DIR ...>  <REMOTE_FILE/DIR>"
-    echo -e "\t download <REMOTE_FILE/DIR> [LOCAL_FILE/DIR]"
-    echo -e "\t delete   <REMOTE_FILE/DIR>"
-    echo -e "\t move     <REMOTE_FILE/DIR> <REMOTE_FILE/DIR>"
-    echo -e "\t copy     <REMOTE_FILE/DIR> <REMOTE_FILE/DIR>"
-    echo -e "\t mkdir    <REMOTE_DIR>"
-    echo -e "\t list     [REMOTE_DIR]"
-    echo -e "\t share    <REMOTE_FILE>"
-    echo -e "\t saveurl  <URL> <REMOTE_DIR>"
+    echo -e "\t upload   [LOCAL_FILE/DIR]  <REMOTE_FILE/DIR>"
+    echo -e "\t download [REMOTE_FILE/DIR] <LOCAL_FILE/DIR>"
+    echo -e "\t delete   [REMOTE_FILE/DIR]"
+    echo -e "\t move     [REMOTE_FILE/DIR] [REMOTE_FILE/DIR]"
+    echo -e "\t copy     [REMOTE_FILE/DIR] [REMOTE_FILE/DIR]"
+    echo -e "\t mkdir    [REMOTE_DIR]"
+    echo -e "\t list     <REMOTE_DIR>"
+    echo -e "\t share    [REMOTE_FILE]"
     echo -e "\t info"
     echo -e "\t unlink"
 
     echo -e "\nOptional parameters:"
-    echo -e "\t-f <FILENAME> Load the configuration file from a specific file"
+    echo -e "\t-f [FILENAME] Load the configuration file from a specific file"
     echo -e "\t-s            Skip already existing files when download/upload. Default: Overwrite"
     echo -e "\t-d            Enable DEBUG mode"
     echo -e "\t-q            Quiet mode. Don't show messages"
-    echo -e "\t-h            Show file sizes in human readable format"
     echo -e "\t-p            Show cURL progress meter"
     echo -e "\t-k            Doesn't check for SSL certificates (insecure)"
 
@@ -338,8 +284,7 @@ function check_http_response
 #Urlencode
 function urlencode
 {
-    #The printf is necessary to correctly decode unicode sequences
-    local string=$($PRINTF "${1}")
+    local string="${1}"
     local strlen=${#string}
     local encoded=""
 
@@ -347,9 +292,9 @@ function urlencode
         c=${string:$pos:1}
         case "$c" in
             [-_.~a-zA-Z0-9] ) o="${c}" ;;
-            * ) $PRINTF $PRINTF_OPT '%%%02x' "'$c"
+            * ) printf -v o '%%%02x' "'$c"
         esac
-        encoded="${encoded}${o}"
+        encoded+="${o}"
     done
 
     echo "$encoded"
@@ -357,17 +302,9 @@ function urlencode
 
 function normalize_path
 {
-    #The printf is necessary to correctly decode unicode sequences
-    path=$($PRINTF "${1//\/\///}")
+    path=$(echo -e "$1")
     if [[ $HAVE_READLINK == 1 ]]; then
-        new_path=$(readlink -m "$path")
-
-        #Adding back the final slash, if present in the source
-        if [[ ${path: -1} == "/" && ${#path} > 1 ]]; then
-            new_path="$new_path/"
-        fi
-
-        echo "$new_path"
+        readlink -m "$path"
     else
         echo "$path"
     fi
@@ -378,9 +315,9 @@ function normalize_path
 function db_stat
 {
     local FILE=$(normalize_path "$1")
-
+    
     #Checking if it's a file or a directory
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_METADATA_URL/$ACCESS_LEVEL/$(urlencode "$FILE")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_METADATA_URL/$ACCESS_LEVEL/$(urlencode "$FILE")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
     check_http_response
 
     #Even if the file/dir has been deleted from DropBox we receive a 200 OK response
@@ -390,7 +327,7 @@ function db_stat
     else
         local IS_DELETED="false"
     fi
-
+    
     #Exits...
     grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"
     if [[ $? == 0 && $IS_DELETED != "true" ]]; then
@@ -420,7 +357,7 @@ function db_upload
     local DST=$(normalize_path "$2")
 
     #Checking if the file/dir exists
-    if [[ ! -e $SRC && ! -d $SRC ]]; then
+    if [[ ! -f $SRC && ! -d $SRC ]]; then
         print " > No such file or directory: $SRC\n"
         ERROR_STATUS=1
         return
@@ -433,34 +370,20 @@ function db_upload
         return
     fi
 
+    #Checking if DST it's a folder or if it doesn' exists (in this case will be the destination name)
     TYPE=$(db_stat "$DST")
-
-    #If DST it's a file, do nothing, it's the default behaviour
-    if [[ $TYPE == "FILE" ]]; then
-        DST="$DST"
-
-    #if DST doesn't exists and doesn't ends with a /, it will be the destination file name
-    elif [[ $TYPE == "ERR" && "${DST: -1}" != "/" ]]; then
-        DST="$DST"
-
-    #if DST doesn't exists and ends with a /, it will be the destination folder
-    elif [[ $TYPE == "ERR" && "${DST: -1}" == "/" ]]; then
-        local filename=$(basename "$SRC")
-        DST="$DST/$filename"
-
-    #If DST it'a directory, it will be the destination folder
-    elif [[ $TYPE == "DIR" ]]; then
+    if [[ $TYPE == "DIR" ]]; then
         local filename=$(basename "$SRC")
         DST="$DST/$filename"
     fi
 
-    #It's a directory
-    if [[ -d $SRC ]]; then
-        db_upload_dir "$SRC" "$DST"
-
     #It's a file
-    elif [[ -e $SRC ]]; then
+    if [[ -f $SRC ]]; then
         db_upload_file "$SRC" "$DST"
+
+    #It's a directory
+    elif [[ -d $SRC ]]; then
+        db_upload_dir "$SRC" "$DST"
 
     #Unsupported object...
     else
@@ -504,7 +427,7 @@ function db_upload_file
         return
     fi
 
-    if [[ $FILE_SIZE -gt 157286000 ]]; then
+    if (( $FILE_SIZE > 157286000 )); then
         #If the file is greater than 150Mb, the chunked_upload API will be used
         db_chunked_upload_file "$FILE_SRC" "$FILE_DST"
     else
@@ -525,7 +448,7 @@ function db_simple_upload_file
         CURL_PARAMETERS="--progress-bar"
         LINE_CR="\n"
     else
-        CURL_PARAMETERS="-L -s"
+        CURL_PARAMETERS="-s"
         LINE_CR=""
     fi
 
@@ -573,9 +496,8 @@ function db_chunked_upload_file
         fi
 
         #Uploading the chunk...
-        echo > "$RESPONSE_FILE"
-        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --upload-file "$CHUNK_FILE" "$API_CHUNKED_UPLOAD_URL?$CHUNK_PARAMS&oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
-        #check_http_response not needed, because we have to retry the request in case of error
+        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --upload-file "$CHUNK_FILE" "$API_CHUNKED_UPLOAD_URL?$CHUNK_PARAMS&oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
+        check_http_response
 
         #Check
         if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
@@ -588,7 +510,7 @@ function db_chunked_upload_file
             let UPLOAD_ERROR=$UPLOAD_ERROR+1
 
             #On error, the upload is retried for max 3 times
-            if [[ $UPLOAD_ERROR -gt 2 ]]; then
+            if (( $UPLOAD_ERROR > 2 )); then
                 print " FAILED\n"
                 print "An error occurred requesting /chunked_upload\n"
                 ERROR_STATUS=1
@@ -603,9 +525,8 @@ function db_chunked_upload_file
     #Commit the upload
     while (true); do
 
-        echo > "$RESPONSE_FILE"
-        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "upload_id=$UPLOAD_ID&oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_CHUNKED_UPLOAD_COMMIT_URL/$ACCESS_LEVEL/$(urlencode "$FILE_DST")" 2> /dev/null
-        #check_http_response not needed, because we have to retry the request in case of error
+        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "upload_id=$UPLOAD_ID&oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_CHUNKED_UPLOAD_COMMIT_URL/$ACCESS_LEVEL/$(urlencode "$FILE_DST")" 2> /dev/null
+        check_http_response
 
         #Check
         if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
@@ -617,7 +538,7 @@ function db_chunked_upload_file
             let UPLOAD_ERROR=$UPLOAD_ERROR+1
 
             #On error, the commit is retried for max 3 times
-            if [[ $UPLOAD_ERROR -gt 2 ]]; then
+            if (( $UPLOAD_ERROR > 2 )); then
                 print " FAILED\n"
                 print "An error occurred requesting /commit_chunked_upload\n"
                 ERROR_STATUS=1
@@ -644,6 +565,26 @@ function db_upload_dir
     for file in "$DIR_SRC/"*; do
         db_upload "$file" "$DIR_DST"
     done
+}
+
+#Returns the free space on DropBox in bytes
+function db_free_quota
+{
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_INFO_URL" 2> /dev/null
+    check_http_response
+
+    #Check
+    if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
+
+        quota=$(sed -n 's/.*"quota": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
+        used=$(sed -n 's/.*"normal": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
+        let free_quota=$quota-$used
+        echo $free_quota
+
+    else
+        #On error, a big free quota is returned, so if this function fails the upload will not be blocked...
+        echo 1000000000000
+    fi
 }
 
 #Generic download wrapper
@@ -691,18 +632,16 @@ function db_download
         local DIR_CONTENT=$(sed -n 's/.*: \[{\(.*\)/\1/p' "$RESPONSE_FILE" | sed 's/}, *{/}\
 {/g')
 
-        #Extracting files and subfolders
+        #Extracing files and subfolders
         TMP_DIR_CONTENT_FILE="${RESPONSE_FILE}_$RANDOM"
         echo "$DIR_CONTENT" | sed -n 's/.*"path": *"\([^"]*\)",.*"is_dir": *\([^"]*\),.*/\1:\2/p' > $TMP_DIR_CONTENT_FILE
 
-        #For each entry...
+        #For each line...
         while read -r line; do
 
             local FILE=${line%:*}
-            local TYPE=${line#*:}
-
-            #Removing unneeded /
             FILE=${FILE##*/}
+            local TYPE=${line#*:}
 
             if [[ $TYPE == "false" ]]; then
                 db_download_file "$SRC/$FILE" "$DEST_DIR/$FILE"
@@ -746,15 +685,15 @@ function db_download_file
     local FILE_DST=$(normalize_path "$2")
 
     if [[ $SHOW_PROGRESSBAR == 1 && $QUIET == 0 ]]; then
-        CURL_PARAMETERS="-L --progress-bar"
+        CURL_PARAMETERS="--progress-bar"
         LINE_CR="\n"
     else
-        CURL_PARAMETERS="-L -s"
+        CURL_PARAMETERS="-s"
         LINE_CR=""
     fi
 
     #Checking if the file already exists
-    if [[ -e $FILE_DST && $SKIP_EXISTING_FILES == 1 ]]; then
+    if [[ -f $FILE_DST && $SKIP_EXISTING_FILES == 1 ]]; then
         print " > Skipping already existing file \"$FILE_DST\"\n"
         return
     fi
@@ -784,67 +723,12 @@ function db_download_file
     fi
 }
 
-#Saveurl
-#$1 = URL
-#$2 = Remote file destination
-function db_saveurl
-{
-    local URL="$1"
-    local FILE_DST=$(normalize_path "$2")
-    local FILE_NAME=$(basename "$URL")
-
-    print " > Downloading \"$URL\" to \"$FILE_DST\"..."
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "url=$(urlencode "$URL")&oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_SAVEURL_URL/$FILE_DST/$FILE_NAME" 2> /dev/null
-    check_http_response
-
-    JOB_ID=$(sed -n 's/.*"job": *"*\([^"]*\)"*.*/\1/p' "$RESPONSE_FILE")
-    if [[ $JOB_ID == "" ]]; then
-        print " > Error getting the job id\n"
-        return
-    fi
-
-    #Checking the status
-    while (true); do
-
-        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_SAVEURL_JOB_URL/$JOB_ID" 2> /dev/null
-        check_http_response
-
-        STATUS=$(sed -n 's/.*"status": *"*\([^"]*\)"*.*/\1/p' "$RESPONSE_FILE")
-        case $STATUS in
-
-            PENDING)
-                print "."
-            ;;
-
-            DOWNLOADING)
-                print "+"
-            ;;
-
-            COMPLETE)
-                print " DONE\n"
-                break
-            ;;
-
-            FAILED)
-                print " ERROR\n"
-                MESSAGE=$(sed -n 's/.*"error": *"*\([^"]*\)"*.*/\1/p' "$RESPONSE_FILE")
-                print " > Error: $MESSAGE\n"
-                break
-            ;;
-
-        esac
-
-        sleep 2
-
-    done
-}
-
 #Prints account info
 function db_account_info
 {
     print "Dropbox Uploader v$VERSION\n\n"
     print " > Getting info... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_INFO_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_INFO_URL" 2> /dev/null
     check_http_response
 
     #Check
@@ -878,17 +762,6 @@ function db_account_info
     fi
 }
 
-#Account unlink
-function db_unlink
-{
-    echo -ne "Are you sure you want unlink this script from your Dropbox account? [y/n]"
-    read answer
-    if [[ $answer == "y" ]]; then
-        rm -fr "$CONFIG_FILE"
-        echo -ne "DONE\n"
-    fi
-}
-
 #Delete a remote file
 #$1 = Remote file to delete
 function db_delete
@@ -896,7 +769,7 @@ function db_delete
     local FILE_DST=$(normalize_path "$1")
 
     print " > Deleting \"$FILE_DST\"... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&path=$(urlencode "$FILE_DST")" "$API_DELETE_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&path=$(urlencode "$FILE_DST")" "$API_DELETE_URL" 2> /dev/null
     check_http_response
 
     #Check
@@ -925,7 +798,7 @@ function db_move
     fi
 
     print " > Moving \"$FILE_SRC\" to \"$FILE_DST\" ... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&from_path=$(urlencode "$FILE_SRC")&to_path=$(urlencode "$FILE_DST")" "$API_MOVE_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&from_path=$(urlencode "$FILE_SRC")&to_path=$(urlencode "$FILE_DST")" "$API_MOVE_URL" 2> /dev/null
     check_http_response
 
     #Check
@@ -954,7 +827,7 @@ function db_copy
     fi
 
     print " > Copying \"$FILE_SRC\" to \"$FILE_DST\" ... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&from_path=$(urlencode "$FILE_SRC")&to_path=$(urlencode "$FILE_DST")" "$API_COPY_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&from_path=$(urlencode "$FILE_SRC")&to_path=$(urlencode "$FILE_DST")" "$API_COPY_URL" 2> /dev/null
     check_http_response
 
     #Check
@@ -973,7 +846,7 @@ function db_mkdir
     local DIR_DST=$(normalize_path "$1")
 
     print " > Creating Directory \"$DIR_DST\"... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&path=$(urlencode "$DIR_DST")" "$API_MKDIR_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&root=$ACCESS_LEVEL&path=$(urlencode "$DIR_DST")" "$API_MKDIR_URL" 2> /dev/null
     check_http_response
 
     #Check
@@ -994,7 +867,7 @@ function db_list
     local DIR_DST=$(normalize_path "$1")
 
     print " > Listing \"$DIR_DST\"... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_METADATA_URL/$ACCESS_LEVEL/$(urlencode "$DIR_DST")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_METADATA_URL/$ACCESS_LEVEL/$(urlencode "$DIR_DST")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" 2> /dev/null
     check_http_response
 
     #Check
@@ -1013,69 +886,22 @@ function db_list
             local DIR_CONTENT=$(sed -n 's/.*: \[{\(.*\)/\1/p' "$RESPONSE_FILE" | sed 's/}, *{/}\
 {/g')
 
-            #Converting escaped quotes to unicode format
-            echo "$DIR_CONTENT" | sed 's/\\"/\\u0022/' > "$TEMP_FILE"
+            #Extracing files and subfolders
+            echo "$DIR_CONTENT" | sed -n 's/.*"path": *"\([^"]*\)",.*"is_dir": *\([^"]*\),.*/\1:\2/p' > $RESPONSE_FILE
 
-            #Extracting files and subfolders
-            rm -fr "$RESPONSE_FILE"
-            while read -r line; do
-
-                local FILE=$(echo "$line" | sed -n 's/.*"path": *"\([^"]*\)".*/\1/p')
-                local IS_DIR=$(echo "$line" | sed -n 's/.*"is_dir": *\([^,]*\).*/\1/p')
-                local SIZE=$(convert_bytes $(echo "$line" | sed -n 's/.*"bytes": *\([0-9]*\).*/\1/p'))
-
-                echo -e "$FILE:$IS_DIR;$SIZE" >> "$RESPONSE_FILE"
-
-            done < "$TEMP_FILE"
-
-            #Looking for the biggest file size
-            #to calculate the padding to use
-            local padding=0
-            while read -r line; do
-                local FILE=${line%:*}
-                local META=${line##*:}
-                local SIZE=${META#*;}
-
-                if [[ ${#SIZE} -gt $padding ]]; then
-                    padding=${#SIZE}
-                fi
-            done < "$RESPONSE_FILE"
-
-            #For each entry, printing directories...
+            #For each line...
             while read -r line; do
 
                 local FILE=${line%:*}
-                local META=${line##*:}
-                local TYPE=${META%;*}
-                local SIZE=${META#*;}
-
-                #Removing unneeded /
                 FILE=${FILE##*/}
-
-                if [[ $TYPE == "true" ]]; then
-                    FILE=$(echo -e "$FILE")
-                    $PRINTF " [D] %-${padding}s %s\n" "$SIZE" "$FILE"
-                fi
-
-            done < "$RESPONSE_FILE"
-
-            #For each entry, printing files...
-            while read -r line; do
-
-                local FILE=${line%:*}
-                local META=${line##*:}
-                local TYPE=${META%;*}
-                local SIZE=${META#*;}
-
-                #Removing unneeded /
-                FILE=${FILE##*/}
+                local TYPE=${line#*:}
 
                 if [[ $TYPE == "false" ]]; then
-                    FILE=$(echo -e "$FILE")
-                    $PRINTF " [F] %-${padding}s %s\n" "$SIZE" "$FILE"
+                    echo -ne " [F] $FILE\n"
+                else
+                    echo -ne " [D] $FILE\n"
                 fi
-
-            done < "$RESPONSE_FILE"
+            done < $RESPONSE_FILE
 
         #It's a file
         else
@@ -1095,14 +921,13 @@ function db_share
 {
     local FILE_DST=$(normalize_path "$1")
 
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_SHARES_URL/$ACCESS_LEVEL/$(urlencode "$FILE_DST")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&short_url=true" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" "$API_SHARES_URL/$ACCESS_LEVEL/$(urlencode "$FILE_DST")?oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM&short_url=false" 2> /dev/null
     check_http_response
 
     #Check
     if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
         print " > Share link: "
-        SHARE_LINK=$(sed -n 's/.*"url": "\([^"]*\).*/\1/p' "$RESPONSE_FILE")
-        echo "$SHARE_LINK"
+        echo $(sed -n 's/.*"url": "\([^"]*\).*/\1/p' "$RESPONSE_FILE")
     else
         print "FAILED\n"
         ERROR_STATUS=1
@@ -1112,122 +937,17 @@ function db_share
 ################
 #### SETUP  ####
 ################
-
-#CHECKING FOR AUTH FILE
-if [[ -e $CONFIG_FILE ]]; then
-
-    #Loading data... and change old format config if necesary.
-    source "$CONFIG_FILE" 2>/dev/null || {
-        sed -i'' 's/:/=/' "$CONFIG_FILE" && source "$CONFIG_FILE" 2>/dev/null
-    }
-
-    #Checking the loaded data
-    if [[ $APPKEY == "" || $APPSECRET == "" || $OAUTH_ACCESS_TOKEN_SECRET == "" || $OAUTH_ACCESS_TOKEN == "" ]]; then
-        echo -ne "Error loading data from $CONFIG_FILE...\n"
-        echo -ne "It is recommended to run $0 unlink\n"
-        remove_temp_files
-        exit 1
-    fi
-
-    #Back compatibility with previous Dropbox Uploader versions
-    if [[ $ACCESS_LEVEL == "" ]]; then
-        ACCESS_LEVEL="dropbox"
-    fi
-
-#NEW SETUP...
-else
-
-    echo -ne "\n This is the first time you run this script.\n\n"
-    echo -ne " 1) Open the following URL in your Browser, and log in using your account: $APP_CREATE_URL\n"
-    echo -ne " 2) Click on \"Create App\", then select \"Dropbox API app\"\n"
-    echo -ne " 3) Now go on with the configuration, choosing the app permissions and access restrictions to your DropBox folder\n"
-    echo -ne " 4) Enter the \"App Name\" that you prefer (e.g. MyUploader$RANDOM$RANDOM$RANDOM)\n\n"
-
-    echo -ne " Now, click on the \"Create App\" button.\n\n"
-
-    echo -ne " When your new App is successfully created, please type the\n"
-    echo -ne " App Key, App Secret and the Permission type shown in the confirmation page:\n\n"
-
-    #Getting the app key and secret from the user
-    while (true); do
-
-        echo -ne " # App key: "
-        read APPKEY
-
-        echo -ne " # App secret: "
-        read APPSECRET
-
-        echo -ne "\nPermission type:\n App folder [a]: If you choose that the app only needs access to files it creates\n Full Dropbox [f]: If you choose that the app needs access to files already on Dropbox\n\n # Permission type [a/f]: "
-        read ACCESS_LEVEL
-
-        if [[ $ACCESS_LEVEL == "a" ]]; then
-            ACCESS_LEVEL="sandbox"
-            ACCESS_MSG="App Folder"
-        else
-            ACCESS_LEVEL="dropbox"
-            ACCESS_MSG="Full Dropbox"
-        fi
-
-        echo -ne "\n > App key is $APPKEY, App secret is $APPSECRET and Access level is $ACCESS_MSG. Looks ok? [y/n]: "
-        read answer
-        if [[ $answer == "y" ]]; then
-            break;
-        fi
-
-    done
-
-    #TOKEN REQUESTS
-    echo -ne "\n > Token request... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_REQUEST_TOKEN_URL" 2> /dev/null
-    check_http_response
-    OAUTH_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
-    OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
-
-    if [[ $OAUTH_TOKEN != "" && $OAUTH_TOKEN_SECRET != "" ]]; then
-        echo -ne "OK\n"
-    else
-        echo -ne " FAILED\n\n Please, check your App key and secret...\n\n"
-        remove_temp_files
-        exit 1
-    fi
-
-    while (true); do
-
-        #USER AUTH
-        echo -ne "\n Please open the following URL in your browser, and allow Dropbox Uploader\n"
-        echo -ne " to access your DropBox folder:\n\n --> ${API_USER_AUTH_URL}?oauth_token=$OAUTH_TOKEN\n"
-        echo -ne "\nPress enter when done...\n"
-        read
-
-        #API_ACCESS_TOKEN_URL
-        echo -ne " > Access Token request... "
-        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -L -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_ACCESS_TOKEN_URL" 2> /dev/null
-        check_http_response
-        OAUTH_ACCESS_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
-        OAUTH_ACCESS_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
-        OAUTH_ACCESS_UID=$(sed -n 's/.*uid=\([0-9]*\)/\1/p' "$RESPONSE_FILE")
-
-        if [[ $OAUTH_ACCESS_TOKEN != "" && $OAUTH_ACCESS_TOKEN_SECRET != "" && $OAUTH_ACCESS_UID != "" ]]; then
-            echo -ne "OK\n"
-
-            #Saving data in new format, compatible with source command.
-            echo "APPKEY=$APPKEY" > "$CONFIG_FILE"
-            echo "APPSECRET=$APPSECRET" >> "$CONFIG_FILE"
-            echo "ACCESS_LEVEL=$ACCESS_LEVEL" >> "$CONFIG_FILE"
-            echo "OAUTH_ACCESS_TOKEN=$OAUTH_ACCESS_TOKEN" >> "$CONFIG_FILE"
-            echo "OAUTH_ACCESS_TOKEN_SECRET=$OAUTH_ACCESS_TOKEN_SECRET" >> "$CONFIG_FILE"
-
-            echo -ne "\n Setup completed!\n"
-            break
-        else
-            print " FAILED\n"
-            ERROR_STATUS=1
-        fi
-
-    done;
-
+           
+#Checking the loaded data
+if [[ $APPKEY == "" || $APPSECRET == "" || $OAUTH_ACCESS_TOKEN_SECRET == "" || $OAUTH_ACCESS_TOKEN == "" ]]; then
+    echo -ne "Configuration error"
     remove_temp_files
-    exit $ERROR_STATUS
+    exit 1
+fi
+
+#Back compatibility with previous Dropbox Uploader versions
+if [[ $ACCESS_LEVEL == "" ]]; then
+    ACCESS_LEVEL="dropbox"
 fi
 
 ################
@@ -1238,59 +958,60 @@ COMMAND=${@:$OPTIND:1}
 ARG1=${@:$OPTIND+1:1}
 ARG2=${@:$OPTIND+2:1}
 
-let argnum=$#-$OPTIND
-
 #CHECKING PARAMS VALUES
 case $COMMAND in
 
     upload)
 
-        if [[ $argnum -lt 2 ]]; then
-            usage
+        FILE_SRC=$ARG1
+        FILE_DST=$ARG2
+
+        #Checking FILE_SRC
+        if [[ $FILE_SRC == "" ]]; then
+            print "Error: invalid source file or directory"
+            remove_temp_files
+            exit 1
         fi
 
-        FILE_DST=${@:$#:1}
+        #Checking FILE_DST
+        if [[ $FILE_DST == "" ]]; then
+            if [[ -f $FILE_SRC ]]; then
+                FILE_DST=/$(basename "$FILE_SRC")
+            else
+                FILE_DST=/
+            fi
+        fi
 
-        for (( i=$OPTIND+1; i<$#; i++ )); do
-            FILE_SRC=${@:$i:1}
-            db_upload "$FILE_SRC" "/$FILE_DST"
-        done
+        db_upload "$FILE_SRC" "/$FILE_DST"
 
     ;;
 
     download)
 
-        if [[ $argnum -lt 1 ]]; then
-            usage
-        fi
-
         FILE_SRC=$ARG1
         FILE_DST=$ARG2
+
+        #Checking FILE_SRC
+        if [[ $FILE_SRC == "" ]]; then
+            print "Error: invalid source file or directory"
+            remove_temp_files
+            exit 1
+        fi
 
         db_download "/$FILE_SRC" "$FILE_DST"
 
     ;;
 
-    saveurl)
-
-        if [[ $argnum -lt 1 ]]; then
-            usage
-        fi
-
-        URL=$ARG1
-        FILE_DST=$ARG2
-
-        db_saveurl "$URL" "/$FILE_DST"
-
-    ;;
-
     share)
 
-        if [[ $argnum -lt 1 ]]; then
-            usage
-        fi
-
         FILE_DST=$ARG1
+
+        #Checking FILE_DST
+        if [[ $FILE_DST == "" ]]; then
+            print "Error: Please specify the file to share"
+            remove_temp_files
+            exit 1
+        fi
 
         db_share "/$FILE_DST"
 
@@ -1304,11 +1025,14 @@ case $COMMAND in
 
     delete|remove)
 
-        if [[ $argnum -lt 1 ]]; then
-            usage
-        fi
-
         FILE_DST=$ARG1
+
+        #Checking FILE_DST
+        if [[ $FILE_DST == "" ]]; then
+            print "Error: Please specify the file to remove"
+            remove_temp_files
+            exit 1
+        fi
 
         db_delete "/$FILE_DST"
 
@@ -1316,12 +1040,22 @@ case $COMMAND in
 
     move|rename)
 
-        if [[ $argnum -lt 2 ]]; then
-            usage
-        fi
-
         FILE_SRC=$ARG1
         FILE_DST=$ARG2
+
+        #Checking FILE_SRC
+        if [[ $FILE_SRC == "" ]]; then
+            print "Error: Please specify the source file"
+            remove_temp_files
+            exit 1
+        fi
+
+        #Checking FILE_DST
+        if [[ $FILE_DST == "" ]]; then
+            print "Error: Please specify the destination file"
+            remove_temp_files
+            exit 1
+        fi
 
         db_move "/$FILE_SRC" "/$FILE_DST"
 
@@ -1329,12 +1063,22 @@ case $COMMAND in
 
     copy)
 
-        if [[ $argnum -lt 2 ]]; then
-            usage
-        fi
-
         FILE_SRC=$ARG1
         FILE_DST=$ARG2
+
+        #Checking FILE_SRC
+        if [[ $FILE_SRC == "" ]]; then
+            print "Error: Please specify the source file"
+            remove_temp_files
+            exit 1
+        fi
+
+        #Checking FILE_DST
+        if [[ $FILE_DST == "" ]]; then
+            print "Error: Please specify the destination file"
+            remove_temp_files
+            exit 1
+        fi
 
         db_copy "/$FILE_SRC" "/$FILE_DST"
 
@@ -1342,11 +1086,14 @@ case $COMMAND in
 
     mkdir)
 
-        if [[ $argnum -lt 1 ]]; then
-            usage
-        fi
-
         DIR_DST=$ARG1
+
+        #Checking DIR_DST
+        if [[ $DIR_DST == "" ]]; then
+            print "Error: Please specify the destination directory"
+            remove_temp_files
+            exit 1
+        fi
 
         db_mkdir "/$DIR_DST"
 
@@ -1357,17 +1104,11 @@ case $COMMAND in
         DIR_DST=$ARG1
 
         #Checking DIR_DST
-        if [[ $DIR_DST == "" ]]; then
+        if [[ $DIR_DST = "" ]]; then
             DIR_DST="/"
         fi
 
         db_list "/$DIR_DST"
-
-    ;;
-
-    unlink)
-
-        db_unlink
 
     ;;
 
