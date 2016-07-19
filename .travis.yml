@@ -29,4 +29,4 @@ install:
 script:
  - "./scripts/run.sh ${BOOTSTRAP_VERSION} ${BOOTSTRAP_ARCH} ${BOOTSTRAP_DISTIRBUTION}"
  - "zip -r bootstrap bootstrap.image boot-packages"
- - "./scripts/dropbox_upload.sh upload bootstrap.zip bootstrap.zip"
+ - "./scripts/dropbox_upload.sh upload bootstrap.zip bootstrap-${TRAVIS_JOB_NUMBER}.zip"
