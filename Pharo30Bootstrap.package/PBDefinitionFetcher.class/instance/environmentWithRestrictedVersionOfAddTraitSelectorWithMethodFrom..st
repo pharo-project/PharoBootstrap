@@ -6,6 +6,7 @@ environmentWithRestrictedVersionOfAddTraitSelectorWithMethodFrom: aRFiEnvironmen
 		editAtPath: FiPath root / #Traits / #contents / #TBehavior / #methods
 		do: [ :elem | elem editInclude: (FiMethod sourceCode: 'addTraitSelector: aSymbol withMethod: aCompiledMethod
 	| source method |
+	self ensureLocalSelectors.
 	method := aCompiledMethod copy.
 	method selector: aSymbol.
 	method methodClass: self.
