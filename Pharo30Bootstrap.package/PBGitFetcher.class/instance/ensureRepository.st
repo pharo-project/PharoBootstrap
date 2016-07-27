@@ -1,5 +1,9 @@
 as yet unclassified
 ensureRepository
 
-	repository ensureLocalRepository.
-	(repository packageNamed: 'BaselineOfPharoBootstrap') loadLatest.
+	| ftRepo |
+	"repository ensureLocalRepository."
+	ftRepo := (MCFileTreeRepository new directory: 'src' asFileReference).
+	(ftRepo versionWithInfo: (ftRepo versionInfoFromVersionNamed: 'BaselineOfPharoBootstrap' )) load.
+		
+"		packageNamed: 'BaselineOfPharoBootstrap') loadLatest."

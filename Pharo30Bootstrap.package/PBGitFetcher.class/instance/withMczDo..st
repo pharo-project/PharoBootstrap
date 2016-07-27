@@ -1,6 +1,6 @@
 actions
 withMczDo: aBlock
 
-	#BaselineOfPharoBootstrap asClass project version packages do: [ :package | | version |
-		aBlock value: (repository packageNamed: package name ) latestVersion.
-	].
+"	#BaselineOfPharoBootstrap asClass project version packages do: [ :package |
+		aBlock value: (repository packageNamed: package name ) latestVersion mcVersion.
+	]."

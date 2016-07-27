@@ -2,7 +2,7 @@ actions
 exportAllMczTo: aDirectory
 	
 	| fileRepository directory |
-	self ensureRepository.
+"	self ensureRepository.
 	directory := aDirectory asFileReference ensureCreateDirectory.
 	fileRepository := MCDirectoryRepository new directory: directory.
-	self withMczDo: [ :mcz | fileRepository basicStoreVersion: mcz ].
+	self withMczDo: [ :mcz | fileRepository basicStoreVersion: mcz ]."
