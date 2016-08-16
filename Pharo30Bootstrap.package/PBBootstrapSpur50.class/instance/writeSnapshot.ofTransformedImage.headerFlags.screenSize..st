@@ -17,7 +17,7 @@ writeSnapshot: imageFileName ofTransformedImage: spurHeap headerFlags: headerFla
 		setEndOfMemory: spurHeap endOfMemory + spurHeap bridgeSize. "hack; initializeInterpreter: cuts it back by bridgeSize"
 	sim initializeInterpreter: 0;
 		setImageHeaderFlagsFrom: headerFlags;
-		setSavedWindowSize: 800*600;
+		setSavedWindowSize: (800<<16)+600;
 		setDisplayForm: nil.
 	spurHeap allOldSpaceEntitiesDo: [:e| penultimate := ultimate. ultimate := e].
 	"Check that we've left behind the old, pre-pigCompact segmented save"
