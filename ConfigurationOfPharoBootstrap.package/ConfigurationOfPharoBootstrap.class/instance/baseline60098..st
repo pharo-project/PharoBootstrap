@@ -13,6 +13,7 @@ baseline60098: spec
 			spec package: 'CodeExport'.
 			spec package: 'CodeImport'.
 			spec package: 'CodeImportCommandLineHandlers'.
+			spec package: 'Colors'.
 			spec package: 'Collections-Abstract'.
 			spec package: 'Collections-Arithmetic'.
 			spec package: 'Collections-Atomic'.
@@ -133,5 +134,5 @@ baseline60098: spec
 			
 			spec group: 'default' with: #( 'minimal' 'Monticello' 'Ring-Monticello' 'Compression').
 			
-			spec group: 'minimal' with: #(#CodeImport #'Ring-Core-Containers' #CodeExport #'System-BasicCommandLineHandler' #'Multilingual-Encodings' #'System-SessionManager' #'Collections-Support' #'FileSystem-Disk' #'RPackage-Core' #CodeImportCommandLineHandlers #'System-Platforms' #RingChunkImporter #'System-Hashing' #'Ring-Core-Kernel' #'Collections-Unordered' #'Network-UUID' #'Collections-Native' #Slot #'System-Finalization' #'System-Localization' #'System-Support' #'Collections-Arithmetic' #'Collections-Streams' #'Multilingual-Languages' #'Collections-Stack' #'System-Sources' #Transcript #'Zinc-Character-Encoding-Core' #'OpalCompiler-Core' #'Collections-Sequenceable' #'Zinc-Resource-Meta-Core' #Jobs #Kernel #'Collections-Weak' #'Collections-Abstract' #'Announcements-Core' #'Multilingual-TextConversion' #Files #'System-Changes' #'System-Model' #'Collections-Atomic' #UIManager #'Collections-Strings' #'System-Announcements' #'AST-Core' #'System-CommandLine' #Traits #'FileSystem-Core' #'System-CommandLineHandler' #'Random-Core' 'NonInteractiveTranscript' 'PharoBootstrap-Initialization').
+			spec group: 'minimal' with: #(#Colors #CodeImport #'Ring-Core-Containers' #CodeExport #'System-BasicCommandLineHandler' #'Multilingual-Encodings' #'System-SessionManager' #'Collections-Support' #'FileSystem-Disk' #'RPackage-Core' #CodeImportCommandLineHandlers #'System-Platforms' #RingChunkImporter #'System-Hashing' #'Ring-Core-Kernel' #'Collections-Unordered' #'Network-UUID' #'Collections-Native' #Slot #'System-Finalization' #'System-Localization' #'System-Support' #'Collections-Arithmetic' #'Collections-Streams' #'Multilingual-Languages' #'Collections-Stack' #'System-Sources' #Transcript #'Zinc-Character-Encoding-Core' #'OpalCompiler-Core' #'Collections-Sequenceable' #'Zinc-Resource-Meta-Core' #Jobs #Kernel #'Collections-Weak' #'Collections-Abstract' #'Announcements-Core' #'Multilingual-TextConversion' #Files #'System-Changes' #'System-Model' #'Collections-Atomic' #UIManager #'Collections-Strings' #'System-Announcements' #'AST-Core' #'System-CommandLine' #Traits #'FileSystem-Core' #'System-CommandLineHandler' #'Random-Core' 'NonInteractiveTranscript' 'PharoBootstrap-Initialization').
 	].
