@@ -1,5 +1,5 @@
 {
-	"category" : "BaselineOfPharoBootstrapProcess",
+	"category" : "BaselineOfBootstrapProcess",
 	"classinstvars" : [
 		 ],
 	"classvars" : [
@@ -7,7 +7,7 @@
 	"commentStamp" : "ChristopheDemarey 6/30/2016 15:02",
 	"instvars" : [
 		 ],
-	"name" : "BaselineOfPharoBootstrapProcess",
+	"name" : "BaselineOfBootstrapProcess",
 	"pools" : [
 		 ],
 	"super" : "BaselineOf",
