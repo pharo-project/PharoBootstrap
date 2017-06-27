@@ -22,8 +22,4 @@ baseline: spec
 					versionString: '0.3.4';
 					loads: #('mini');
 					repository: 'http://www.smalltalkhub.com/mc/MartinDias/Ficus/main' ].
-
-			spec
-				package: 'ConfigurationOfPharoBootstrap';
-				package: 'Pharo30Bootstrap' with: [ spec requires: #('Espell' 'Ficus' 'Cargo') ].
-			spec group: 'dev' with: #('Pharo30Bootstrap' 'Espell' 'Ficus') ]
+	]
