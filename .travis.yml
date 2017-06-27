@@ -1,8 +1,7 @@
 language: c
 env:
   global:
-  - BOOTSTRAP_VERSION=6.0.60098
-  - PHARO_VERSION=50
+  - PHARO_VERSION=60
   - secure: V5UnNF7LHqaBVzfjMkdQpiUCemUhKjm07KMEmfPkAuEsK1czoK/ZM3cGtmiIW5Ul86qvMjdXfsz6URCEsFpdb6W4EXzcwJmtxgJjvaC3NJcvNNUgt+uPU3yokwGuYIrdmlVcO73kMrk3trezexen4EXrPQjR3yUrLCXdSXJ1j97AxnT5drCLuBXAaw9W6QiHInWRE9UMIP+CY5c0EsH4JZy6uqAArWzY74fKawr7lOafLA9AzlCGE87q9N5SeUwKIgSSz9AuctAX0o+LoTKegDtMGLOaGtFFCCwgkGgZfAh3dXBut60F8uglmRWcUb0M3+9VWljmDfbLoupMFn2KQFNn+Guap9O2efeelkcpubp2/rXC0QXuLLBPfUyRyKQIOK06jBVz5NxJzUQvv7Yae1fv/R6qB2DSgK6+bF8QGwdZ8AXROmZ75sJc9mR26VRirm8MtTr5xEpDJ4ldLQo9rZUF8x6+pnhBM42wgbRMXcjbxngb1pO5NUjgAHZk7Ri09ZAXUUu5+FLwrn1NSN5UDn4AjmUipK0mwvab/IS7TmpQGh3DoFk2YUCgrVdlFCw/h8kel0EivhG2zXC1UJUXn6gAek1VuuHfdh2vR8/WbNmcdPFxG7oQiJb9hVhVkvgNdltkAPzKueVOpmGhWeVHXUdtQWoGX04doxvu3KRJAvQ=
   - secure: PZRpRbQp1R0UnowYqgp56ttMMTTB4SpL7DrougKPVNFopAz7eA6yvPl4Q5l9kXdHh2RTd60PHV4nmnlBCJi21kRxSHUYzCT+Pe7rymjnp2jj3JtnZe9WbD+s5PKr5lQ1MzEKNEws/lUXCWMCSHNaa8GBbS5UQncLkvxGM1hCKsMuEtzGUKiFTmbrPGe3wcJoD2ToPh8PPrldbjJvVyWmWjTqqh/IEW9d76M/2F1ZbbMlE7hF0Psk550QkvsvLZHIsymIu/HQouXZp+TSSnv0tj/VAFm8uicvthz/B8wZ25M3zChiLqnRoxOeKKYeQSnm5v+oHIuE3Xg7Ewlh8hJk/7fEP2A1fFZPDX3vCBfjcW4ewOe8mhAtnlyvWu0clRZbZ1rQWDZuLZOVFTAtDVKeYnYrNVbrE+Jso+/1/eOYNtau8pr5RBvA7jMCR3QhDgpk5SsqzlmUjZgrQiJxxnCy64pdDwasRapc6eHKXRq8Dqh+WHF5Sc2Br6IP7sY/tW4AltJ+sBVhdQM4/zPZCubohJy/7d2bytbtHytYt0U1T584E9uDVeprnlhl+tW/FxcAuYP5coKqhN4FYs3UMl70iOFN8/0FYKKQJq0BXVUJuD/pWqFssuLKAGCjHvnWJJ2Lw4zAcUXzkRRXAyzNjOZg8oO4wCW/gz4ZC3U8nlMsAPk=
   - secure: QQNyWAyPqIrZiRSIUJE8p0x4Zu4HTp45ruy8y4K/4NM30sarvg/CXqHRw/5ufB3vkdkbwoyzsgVKHv6u8lLg6Twokridi9tZOohh7RiWY6PTfOkcLx92O2yJ8V92FH6m9KStkg0hagB3eN11IS0l7Bi3XnlEUTObPsrCFL/Tqgt2Vx4CQmlcYH/g2GFWX8mlCoGMmzOSOSs8md6ws0/h4wmA6UQraZgPWPXgvLHkVkKeut9Tc+IqU0hBDBNm1iOCaivze53mxTkEW/LCuogfY/lyOIiKiRKCmtm4v/h9sW59QuNiD3XLBAxbVbbmbg6B2tOGM640B6HBr6a5toFEmQC3PN3Mct1guRSiMkZlx/mo92+Xt/6keUvZ3joeHQgkltlRm4EmCKp9UX51bI74rRM+A/PMGk6POuWzbLEp2On8Rr1CNxxSQKCVC0Q1dsjiVvMnvn4iABLqO8fMl4TSs+O9AC3k9AL89mvED9ga3VIlZR/GnFtWxlGFtErHnPAYu0GIJRJENSsjne7NruwfyE3+/2YoeSJqVSd2eEbkm5q2LH9Ej8vat8eQgwoYoV+jc8pi/LkajpnygEPr7Sa8XODGyKWS1OmBNFWZZGEFt+Gt5pRQhTV5s5RES9hoTgFDNMJR6SQlCeKDdFrpq8zOByfXJmsCRQ15fgFZXKTRw8I=
@@ -12,7 +11,6 @@ env:
   - BOOTSTRAP_ARCH=64 BOOTSTRAP_DISTIRBUTION=default
   - BOOTSTRAP_ARCH=32 BOOTSTRAP_DISTIRBUTION=minimal
   - BOOTSTRAP_ARCH=64 BOOTSTRAP_DISTIRBUTION=minimal
-
 addons:
   apt:
     packages:
@@ -22,11 +20,17 @@ addons:
     - libssl1.0.0:i386
     - libfreetype6:i386
 
-install:
+script:
  - "wget -O - get.pharo.org/${PHARO_VERSION}+vm | bash"
  - "./scripts/install-packages.sh"
+  - "zip -r bootstrapImage Pharo.image Pharo.changes"
  
-script:
- - "./scripts/run.sh ${BOOTSTRAP_VERSION} ${BOOTSTRAP_ARCH} ${BOOTSTRAP_DISTIRBUTION}"
- - "zip -r bootstrap bootstrap.image boot-packages"
- - "./scripts/dropbox_upload.sh upload bootstrap.zip bootstrap-${BOOTSTRAP_VERSION}-${BOOTSTRAP_ARCH}-${BOOTSTRAP_DISTIRBUTION}-${TRAVIS_JOB_NUMBER}.zip"
+deploy:
+  provider: releases
+  api_key:
+    secure: b0VMRoFAQ/QZoXwVRQzDtvu5gzWkwWGLo8TxfYc7bmwzXLg8wQM1/FpKEjyfxH1pa5FYfcZ8n1U+QqdjQA9tYdmJzMZtrLIdK1cwrO3Eu+u9p1qMQ4w+xyWjg7oNmLhlSCJxGHt5FHfa2zm0yiZGrzFWW9TLhe61pfdAv+kUhll8Q6Bi5FkuYX1pSSP8NBrl64B42e7TyF8TznkHTg7NXBEr7cMTYNxBuBpHNSFrtf/Phm45bulp5ln20QRaymmTB5uQiGSEsE7Io8o6rOWgDIP/COxM+VeCbiw/5XwlaEfKYowCVoK6o1DvUoWTgw2iS1W7WQ70m4KV+xL5m73tguCIdHJbtm2BCC6ZYEKF+f5lF+dOQHzeJpx/9RKbjRFySXl+moNfkIaVVNLvVK5KvPh6k0f7RMCsa4TQPPdgvMeJnBbCFP5edqVJYbcRgEds9yIYOioaMQfKG3ZZJ6YHkHhh5spRitdWBjK9pYzxiRNS6miyhi/b+aB0kuLZ8HbkRoAXSt1oGTSrN7QrYE065WfjNHL2CGG8bOHDHAKIHuOw+AmBtLATuZPd1rgX3wtcxuZGm5at2zLwXnLxhktl9nVyKuHjwkgDfihQq1k7mobCfPcMsLZt2eP/78KOAFgL9Aaz0tUWV5Mf14MteMzOyg6mYfGXzTq9px02iRpRhR0=
+  file: bootstrapImage.zip
+  skip_cleanup: true
+  on:
+    repo: guillep/PharoBootstrap
+	tags: true
