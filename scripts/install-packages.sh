@@ -4,7 +4,7 @@ set -ex
 
 ./pharo Pharo.image eval "
 Metacello new 
-	baseline: 'PharoBootstrapProcess';
+	baseline: 'BootstrapProcess';
 	repository: 'filetree://.';
 	load.
 
