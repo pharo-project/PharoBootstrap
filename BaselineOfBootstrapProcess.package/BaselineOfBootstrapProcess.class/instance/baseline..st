@@ -13,7 +13,7 @@ baseline: spec
 			project: 'Ficus'
 				with: [ spec
 					className: #ConfigurationOfFicus;
-					versionString: '0.3.6';
+					versionString: '0.3.7';
 					loads: #('mini');
 					repository: 'http://www.smalltalkhub.com/mc/MartinDias/Ficus/main' ];
 			project: 'Espell'

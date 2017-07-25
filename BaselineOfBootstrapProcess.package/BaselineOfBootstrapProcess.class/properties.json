@@ -1,14 +1,11 @@
 {
-	"category" : "BaselineOfBootstrapProcess",
-	"classinstvars" : [
-		 ],
-	"classvars" : [
-		 ],
 	"commentStamp" : "ChristopheDemarey 6/30/2016 15:02",
-	"instvars" : [
-		 ],
-	"name" : "BaselineOfBootstrapProcess",
-	"pools" : [
-		 ],
 	"super" : "BaselineOf",
-	"type" : "normal" }
+	"category" : "BaselineOfBootstrapProcess",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [ ],
+	"name" : "BaselineOfBootstrapProcess",
+	"type" : "normal"
+}
