@@ -16,9 +16,6 @@ baseline: spec
 					versionString: '0.3.7';
 					loads: #('mini');
 					repository: 'http://www.smalltalkhub.com/mc/MartinDias/Ficus/main' ];
-			project: 'Espell'
-				with: [ spec
-					className: #ConfigurationOfEspell;
-					versionString: #bleedingEdge;
-					repository: 'http://www.smalltalkhub.com/mc/Guille/ObjectSpace/main' ].
+			baseline: 'Espell'
+				with: [ spec repository: 'github://guillep/espell:v1.0/src' ].
 	]
