@@ -1,7 +1,7 @@
 language: c
 env:
   global:
-  - PHARO_VERSION=60
+  - PHARO_VERSION=61
 addons:
   apt:
     packages:
