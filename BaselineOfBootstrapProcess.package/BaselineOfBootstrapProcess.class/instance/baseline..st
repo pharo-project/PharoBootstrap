@@ -17,5 +17,5 @@ baseline: spec
 					loads: #('mini');
 					repository: 'http://www.smalltalkhub.com/mc/MartinDias/Ficus/main' ];
 			baseline: 'Espell' with: [ spec
-				repository: 'github://guillep/espell:v1.1/src'].					
+				repository: 'github://guillep/espell:v1.2/src'].					
 	]
