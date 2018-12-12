@@ -1,7 +1,7 @@
 language: c
 env:
   global:
-  - PHARO_VERSION=61
+  - PHARO_VERSION=70
 addons:
   apt:
     packages:
@@ -14,7 +14,7 @@ addons:
 script:
  - "wget -O - get.pharo.org/${PHARO_VERSION}+vm | bash"
  - "./scripts/install-packages.sh"
- - "zip -r bootstrapImage Pharo.image Pharo.changes"
+ - "zip -r bootstrapImage Pharo.image Pharo.changes Pharo7.0*.sources"
  
 deploy:
   provider: releases
