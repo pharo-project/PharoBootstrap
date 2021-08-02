@@ -8,7 +8,7 @@ I'm the configuration used to load everything needed to perform the bootstrap pr
 Class {
 	#name : #BaselineOfBootstrapProcess,
 	#superclass : #BaselineOf,
-	#category : 'BaselineOfBootstrapProcess'
+	#category : #BaselineOfBootstrapProcess
 }
 
 { #category : #baselines }
@@ -18,15 +18,8 @@ BaselineOfBootstrapProcess >> baseline: spec [
 	spec for: #common do: [
 		spec blessing: #baseline.
 		spec
-			project: 'Beacon'
-				with: [ spec
-					className: #ConfigurationOfBeacon;
-					versionString: #bleedingEdge;
-					repository: 'http://smalltalkhub.com/mc/girba/Beacon/main/' ];
-			baseline: 'OldCompiler' with: [
-				spec repository: 'github://pharo-project/OldCompiler'];
 			baseline: 'Espell' with: [ spec
-				repository: 'github://guillep/espell:v1.5/src'].
+				repository: 'github://guillep/espell:v1.6/src'].
 	]
 
 ]
