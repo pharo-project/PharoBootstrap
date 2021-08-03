@@ -1,20 +1,12 @@
 language: c
 env:
   global:
-  - PHARO_VERSION=70
-addons:
-  apt:
-    packages:
-    - libasound2:i386
-    - libz1:i386
-    - libbz2-1.0:i386
-    - libssl1.0.0:i386
-    - libfreetype6:i386
+  - PHARO_VERSION=100
 
 script:
- - "wget -O - get.pharo.org/${PHARO_VERSION}+vm | bash"
+ - "wget -O - get.pharo.org/64/${PHARO_VERSION}+vm | bash"
  - "./scripts/install-packages.sh"
- - "zip -r bootstrapImage Pharo.image Pharo.changes Pharo7.0*.sources"
+ - "zip -r bootstrapImage Pharo.image Pharo.changes Pharo*.sources"
  
 deploy:
   provider: releases
