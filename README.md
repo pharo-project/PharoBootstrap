@@ -15,7 +15,7 @@ This bootstrap runs on top of Pharo 10.0. It can however produce images for olde
 Just download this repository and load the baseline in a new image. The easiest way to do it is as follows
 
 ```
-$ wget -O - get.pharo.org/50+vm | bash
+$ wget -O - get.pharo.org/100+vm | bash
 $ ./pharo Pharo.image eval "
 Metacello new 
 	baseline: 'PharoBootstrapProcess';
