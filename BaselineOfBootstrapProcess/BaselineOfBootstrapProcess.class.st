@@ -19,7 +19,7 @@ BaselineOfBootstrapProcess >> baseline: spec [
 		spec blessing: #baseline.
 		spec
 			baseline: 'Espell' with: [ spec
-				repository: 'github://guillep/espell:v1.6/src'].
+				repository: 'github://guillep/espell:v1.6.1/src'].
 	]
 
 ]
