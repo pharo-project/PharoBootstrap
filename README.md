@@ -17,9 +17,9 @@ Just download this repository and load the baseline in a new image. The easiest 
 ```
 $ wget -O - get.pharo.org/100+vm | bash
 $ ./pharo Pharo.image eval "
-Metacello new 
-	baseline: 'BootstrapProcess';
-	repository: 'tonel://.';
+Metacello new
+	repository: 'github://pharo-project/PharoBootstrap:master';
+	baseline: 'PharoBootstrap';
 	load.
 
 Smalltalk snapshot: true andQuit: true."
