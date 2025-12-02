@@ -15,11 +15,13 @@ on:
 permissions:
   contents: write       # allows creating / uploading release assets
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PHARO_VERSION: 100
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
