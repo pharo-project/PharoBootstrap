@@ -1,0 +1,37 @@
+# The goal of this action is to run when we create a tag. It will:
+# - Checkout the projets
+# - Download a Pharo image and VM
+# - Install the project
+# - Zip the result
+# - Upload it to the tag assets
+
+name: Build and release
+
+on:
+    push:
+      tags:
+        - "*"
+
+permissions:
+  contents: write       # allows creating / uploading release assets
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Run custom build / preparation steps
+        run: |
+            wget -O - get.pharo.org/64/${PHARO_VERSION}+vm | bash
+            ./scripts/install-packages.sh
+            zip -r bootstrapImage Pharo.image Pharo.changes Pharo*.sources
+        shell: bash
+
+      - name: Upload ZIP to the newly created release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bootstrapImage.zip
