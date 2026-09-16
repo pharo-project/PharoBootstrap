@@ -7,7 +7,7 @@ I'm the configuration used to load everything needed to perform the bootstrap pr
 "
 Class {
 	#name : #BaselineOfBootstrapProcess,
-	#superclass : #BaselineOf,
+	#superclass : #AnObsoleteBaselineOf,
 	#category : #BaselineOfBootstrapProcess
 }
 
@@ -19,7 +19,7 @@ BaselineOfBootstrapProcess >> baseline: spec [
 		spec blessing: #baseline.
 		spec
 			baseline: 'Espell' with: [ spec
-				repository: 'github://guillep/espell:v2.0.0/src'].
+				repository: 'github://guillep/espell:v2.0.1/src'].
 	]
 
 ]
