@@ -7,7 +7,7 @@ I'm the configuration used to load everything needed to perform the bootstrap pr
 "
 Class {
 	#name : #BaselineOfBootstrapProcess,
-	#superclass : #AnObsoleteBaselineOf,
+	#superclass : #BaselineOf,
 	#category : #BaselineOfBootstrapProcess
 }
 
